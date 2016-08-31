@@ -1,125 +1,179 @@
-import React from 'react';
-import { findDOMNode } from 'react-dom';
+'use strict';
 
-const noop = () => {};
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-function clickDrag(Component, opts = {}) {
-    const touch = opts.touch || false;
-    const resetOnSpecialKeys = opts.resetOnSpecialKeys || false;
-    const getSpecificEventData = opts.getSpecificEventData || (() => ({}));
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-    const onDragStart = opts.onDragStart || noop;
-    const onDragStop = opts.onDragStop || noop;
-    const onDragMove = opts.onDragMove || noop;
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-    class ClickDrag extends React.Component {
-        constructor(props) {
-            super(props);
+var _react = require('react');
 
-            this.onMouseDown = this.onMouseDown.bind(this);
-            this.onMouseUp = this.onMouseUp.bind(this);
-            this.onMouseMove = this.onMouseMove.bind(this);
+var _react2 = _interopRequireDefault(_react);
 
-            this.state = {
+var _reactDom = require('react-dom');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
+var noop = function noop() {};
+
+function clickDrag(Component) {
+    var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    var touch = opts.touch || false;
+    var resetOnSpecialKeys = opts.resetOnSpecialKeys || false;
+    var getSpecificEventData = opts.getSpecificEventData || function () {
+        return {};
+    };
+
+    var onDragStart = opts.onDragStart || noop;
+    var onDragStop = opts.onDragStop || noop;
+    var onDragMove = opts.onDragMove || noop;
+
+    var ClickDrag = function (_React$Component) {
+        _inherits(ClickDrag, _React$Component);
+
+        function ClickDrag(props) {
+            _classCallCheck(this, ClickDrag);
+
+            var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ClickDrag).call(this, props));
+
+            _this.onMouseDown = _this.onMouseDown.bind(_this);
+            _this.onMouseUp = _this.onMouseUp.bind(_this);
+            _this.onMouseMove = _this.onMouseMove.bind(_this);
+
+            _this.state = {
                 isMouseDown: false,
                 isMoving: false,
                 mouseDownPositionX: 0,
                 mouseDownPositionY: 0,
                 moveDeltaX: 0,
-                moveDeltaY: 0,
+                moveDeltaY: 0
             };
 
-            this.wasUsingSpecialKeys = false;
+            _this.wasUsingSpecialKeys = false;
+            return _this;
         }
 
-        componentDidMount() {
-            const node = findDOMNode(this);
+        _createClass(ClickDrag, [{
+            key: 'componentDidMount',
+            value: function componentDidMount() {
+                var node = (0, _reactDom.findDOMNode)(this);
 
-            node.addEventListener('mousedown', this.onMouseDown);
-            document.addEventListener('mousemove', this.onMouseMove);
-            document.addEventListener('mouseup', this.onMouseUp);
+                node.addEventListener('mousedown', this.onMouseDown);
+                document.addEventListener('mousemove', this.onMouseMove);
+                document.addEventListener('mouseup', this.onMouseUp);
 
-            if (touch) {
-                node.addEventListener('touchstart', this.onMouseDown);
-                document.addEventListener('touchmove', this.onMouseMove);
-                document.addEventListener('touchend', this.onMouseUp);
-            }
-        }
-
-        componentWillUnmount() {
-            const node = findDOMNode(this);
-
-            node.removeEventListener('mousedown', this.onMouseDown);
-            document.removeEventListener('mousemove', this.onMouseMove);
-            document.removeEventListener('mouseup', this.onMouseUp);
-
-            if (touch) {
-                node.removeEventListener('touchstart', this.onMouseDown);
-                document.removeEventListener('touchmove', this.onMouseMove);
-                document.removeEventListener('touchend', this.onMouseUp);
-            }
-        }
-
-        onMouseDown(e) {
-            // only left mouse button
-            if (touch || e.button === 0) {
-                const pt = (e.changedTouches && e.changedTouches[0]) || e;
-
-                this.setMousePosition(pt.clientX, pt.clientY);
-
-                onDragStart(e);
-            }
-        }
-
-        onMouseUp(e) {
-            if (this.state.isMouseDown) {
-                this.setState({
-                    isMouseDown: false,
-                    isMoving: false,
-                });
-
-                onDragStop(e);
-            }
-        }
-
-        onMouseMove(e) {
-            if (this.state.isMouseDown) {
-                const pt = (e.changedTouches && e.changedTouches[0]) || e;
-
-                const isUsingSpecialKeys = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
-                if (resetOnSpecialKeys && this.wasUsingSpecialKeys !== isUsingSpecialKeys) {
-                    this.wasUsingSpecialKeys = isUsingSpecialKeys;
-                    this.setMousePosition(pt.clientX, pt.clientY);
-                } else {
-                    this.setState({
-                        isMoving: true,
-                        moveDeltaX: pt.clientX - this.state.mouseDownPositionX,
-                        moveDeltaY: pt.clientY - this.state.mouseDownPositionY,
-                        ...getSpecificEventData(e),
-                    });
+                if (touch) {
+                    node.addEventListener('touchstart', this.onMouseDown);
+                    document.addEventListener('touchmove', this.onMouseMove);
+                    document.addEventListener('touchend', this.onMouseUp);
                 }
-
-                onDragMove(e);
             }
-        }
+        }, {
+            key: 'componentWillUnmount',
+            value: function componentWillUnmount() {
+                var node = (0, _reactDom.findDOMNode)(this);
 
-        setMousePosition(x, y) {
-            this.setState({
-                isMouseDown: true,
-                isMoving: false,
-                mouseDownPositionX: x,
-                mouseDownPositionY: y,
-                moveDeltaX: 0,
-                moveDeltaY: 0,
-            });
-        }
+                node.removeEventListener('mousedown', this.onMouseDown);
+                document.removeEventListener('mousemove', this.onMouseMove);
+                document.removeEventListener('mouseup', this.onMouseUp);
 
-        render() {
-            return <Component {...this.props} dataDrag={this.state} />;
-        }
-  }
+                if (touch) {
+                    node.removeEventListener('touchstart', this.onMouseDown);
+                    document.removeEventListener('touchmove', this.onMouseMove);
+                    document.removeEventListener('touchend', this.onMouseUp);
+                }
+            }
+        }, {
+            key: 'onMouseDown',
+            value: function onMouseDown(e) {
+                // only left mouse button
+                if (touch || e.button === 0) {
+                    var pt = e.changedTouches && e.changedTouches[0] || e;
+
+                    this.setMousePosition(pt.clientX, pt.clientY);
+
+                    onDragStart(e);
+                }
+            }
+        }, {
+            key: 'onMouseUp',
+            value: function onMouseUp(e) {
+                if (this.state.isMouseDown) {
+                    this.setState({
+                        isMouseDown: false,
+                        isMoving: false
+                    });
+
+                    onDragStop(e);
+                }
+            }
+        }, {
+            key: 'onMouseMove',
+            value: function onMouseMove(e) {
+                if (this.state.isMouseDown) {
+                    var pt = e.changedTouches && e.changedTouches[0] || e;
+                  
+                    var isUsingSpecialKeys = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
+                    if (resetOnSpecialKeys && this.wasUsingSpecialKeys !== isUsingSpecialKeys) {
+                        this.wasUsingSpecialKeys = isUsingSpecialKeys;
+                        this.setMousePosition(pt.clientX, pt.clientY);
+                    } else {
+                        this.setState(_extends({
+                            id: guid(),
+                            isMoving: true,
+                            moveDeltaX: pt.clientX - this.state.mouseDownPositionX,
+                            moveDeltaY: pt.clientY - this.state.mouseDownPositionY,
+                            deltaX: pt.movementX,
+                            deltaY: pt.movementY,
+                        }, getSpecificEventData(e)));
+                    }
+
+                    onDragMove(e);
+                }
+            }
+        }, {
+            key: 'setMousePosition',
+            value: function setMousePosition(x, y) {
+                this.setState({
+                    isMouseDown: true,
+                    isMoving: false,
+                    mouseDownPositionX: x,
+                    mouseDownPositionY: y,
+                    moveDeltaX: 0,
+                    moveDeltaY: 0
+                });
+            }
+        }, {
+            key: 'render',
+            value: function render() {
+                return _react2.default.createElement(Component, _extends({}, this.props, { dataDrag: this.state }));
+            }
+        }]);
+
+        return ClickDrag;
+    }(_react2.default.Component);
 
     return ClickDrag;
 }
 
-export default clickDrag;
+
+exports.default = clickDrag;
