@@ -1,8 +1,0 @@
-{
-  "scripts": {
-    "build": "browserify app.js --debug -o app.min.js"
-  },
-  "devDependencies": {
-    "babelify": "^5.0.4"
-  }
-}
